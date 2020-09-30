@@ -1,120 +1,157 @@
-#from car import Car
 import datetime
+import itertools
+
 
 class Car:
-    def __init__(self):
-        self.list_car = ['BMW X5', 'Audi A4']
+    id_generator = itertools.count(1, 1)
 
-    def add(self):
-        item = raw_input('''Insert new a car ''')
-        if not item in self.list_car:
-            self.list_car.append(item)
-            print('added.')
-        else:
-            print('Car is already exist.')
+    def __init__(self, name, model, price):
+        self.id = next(Car.id_generator)
+        self.name = name
+        self.model = model
+        self.price = price
+
+
+class CarStore:
+    id_generator = itertools.count(1, 1)
+    sell_id_generator = itertools.count(1, 1)
+
+    def __init__(self, name):
+        self.id = next(CarStore.id_generator)
+        self.name = name
+        self.date = datetime.datetime.now()
+        self.cars = []
+        self.sales_history = []
+
+    def add_car(self, name, model, price):
+        car = Car(name, model, price)
+        self.cars.append(car)
+        print('Successfully add car to car store')
+
+    def sell_car(self, car_id):
+        item = [i for i in self.cars if (int(i.id) == int(car_id))][0]
+        dictionary = {
+            'id': next(CarStore.id_generator),
+            'car': item,
+            'date': datetime.datetime.now()
+        }
+        dict_copy = dictionary.copy()
+        self.sales_history.append(dict_copy)
+        self.delete_car(car_id)
+        print('successfully sell car')
+
+    def delete_car(self, car_id):
+        self.cars = [i for i in self.cars if not (int(i.id) == int(car_id))]
+        print('delete car from car store')
+
+    def cheapest_car(self):
+        return min(self.cars, key=lambda x: x.price)
+
+    def expensive_car(self):
+        return max(self.cars, key=lambda x: x.price)
+
+    def all_cars(self):
+        return self.cars
+
+
+class App:
+    def __init__(self):
+        self.car_stores = []
+        self.car_store = None
+
+    def add_car_store(self):
+        item = raw_input('Insert new a car store ')
+        self.car_store = CarStore(item)
+        self.car_stores.append(self.car_store)
         init()
 
-    def show_all(self):
-        print(self.list_car)
-        init()
-
-
-class Parking:
-    number_all_available = 1
-
-    def __init__(self):
-        self.parking_lot = [
-            {'id': 1, 'name': 'BMW i3', 'price': 2000, 'date': '2020-09-10 12:11:19.074303'},
-            {'id': 2, 'name': 'Audi a7', 'price': 3000, 'date': '2020-08-10 12:11:19.074303'},
-            {'id': 3, 'name': 'Hyundai i10', 'price': 1000, 'date': '2020-09-14 12:11:19.074303'},
-            {'id': 4, 'name': 'Lexus rx 350', 'price': 4000, 'date': '2020-09-15 12:11:19.074303'}
-        ]
-
-    def add_car(self):
-        if len(self.parking_lot) < self.__class__.number_all_available:
-            car_name = raw_input('''Please insert a car name ''')
-            car_price = raw_input('''Please insert price ''')
-            car_date = datetime.datetime.now()
-            dictionary = {
-                "name": car_name,
-                "price": car_price,
-                "date": car_date
-            }
-            dict_copy = dictionary.copy()
-            self.parking_lot.append(dict_copy)
-            print(self.parking_lot)
-            init()
-        else:
-            print('Parking is full')
-            init()
-
-    def show_all_cars(self):
-        self.show_items(self.parking_lot)
+    def add_car_to_store(self):
+        name = raw_input('Insert new a car name ')
+        model = raw_input('Insert new a car model ')
+        price = raw_input('Insert new a car price ')
+        self.car_store.add_car(name, model, price)
         init()
 
     def sell_car(self):
-        self.show_items()
+        self.print_all_cars()
         car_id = input('''
         - - - - - - - - - - - -
         Please select a car id for sell
         - - - - - - - - - - - - 
          ''')
-        self.delete_car(car_id)
-        self.show_all_cars()
+        self.car_store.sell_car(car_id)
+        init()
+
+    def print_all_cars(self):
+        for x in self.car_store.cars:
+            print('- - - - - -')
+            print('id: {} name: {} price: {}'.format(x.id, x.name, x.price))
+            print('- - - - - -')
+
+    def show_all_cars(self):
+        self.print_all_cars()
+        init()
 
     def show_chipset_car(self):
-        cheapest_car = min(self.parking_lot, key=lambda x:x['price'])
-        print('''
-        - - - - - - - - - - - - - 
-        Properties of Cheapest Car
-        - - - - - - - - - - - - -
-        ''')
-        self.show_items([cheapest_car])
+        item = self.car_store.cheapest_car()
+        print('{} is cheapest car'.format(item.name))
         init()
 
     def show_expensive_car(self):
-        cheapest_car = max(self.parking_lot, key=lambda x:x['price'])
-        print('''
-        - - - - - - - - - - - - - 
-        Properties of Expensive Car
-        - - - - - - - - - - - - -
-        ''')
-        self.show_items([cheapest_car])
+        item = self.car_store.expensive_car()
+        print('{} is expensive car'.format(item.name))
         init()
 
-    def delete_selected_car(self):
-        self.show_items()
-        car_id = raw_input('''
+    def delete_car_from_car_store(self):
+        self.print_all_cars()
+        car_id = input('''
         - - - - - - - - - - - -
         Please select a car id for delete
         - - - - - - - - - - - - 
-        ''')
-        self.delete_car(car_id)
-        self.show_all_cars()
+         ''')
+        self.car_store.delete_car(car_id)
+        init()
 
-    def delete_car(self, car_id=0):
-        self.parking_lot = [item for item in self.parking_lot if not (int(item['id']) == int(car_id))]
+    def get_money_made(self):
+        # chera inja sum 0 has
+        result = sum(int(obj['car'].price) for obj in self.car_store.sales_history)
+        print('Money made {}'.format(result))
+        init()
 
-    @staticmethod
-    def show_items(items=[]):
-        for x in items:
-            for k, v in x.items():
-                print('{}: {}'.format(k, v))
+    def our_history_sales(self):
+        print('- - - - - -')
+        for obj in self.car_store.sales_history:
+            print('In this date {}, you sold your {} car for ${}'.format(obj['date'], obj['car'].name, obj['car'].price))
             print('- - - - - -')
+        init()
+
+    def print_all_car_store(self):
+        for x in self.car_stores:
+            for k, v in x.items():
+                print('{}: {}'.format(k, x))
+            print('- - - - - -')
+
+    def show_all_car_store(self):
+        self.print_all_car_store()
+        init()
+
+
+app = App()
 
 
 def switch(x):
-    car = Car()
-    parking = Parking()
+
     switch_case = {
-        0: car.add,
-        1: parking.add_car,
-        2: parking.sell_car,
-        3: parking.show_all_cars,
-        4: parking.show_chipset_car,
-        5: parking.show_expensive_car,
-        6: parking.delete_selected_car,
-        9: car.show_all
+        0: app.add_car_store,
+        1: app.add_car_to_store,
+        2: app.sell_car,
+        3: app.show_all_cars,
+        4: app.show_chipset_car,
+        5: app.show_expensive_car,
+        6: app.delete_car_from_car_store,
+        7: app.get_money_made,
+        8: app.our_history_sales,
+        9: app.show_all_car_store
     }
     func = switch_case.get(x, 'no exist')
     return func()
@@ -133,7 +170,6 @@ def init():
         7- how much money we made ?
         8- our history of sales
         9- all car stores
-        10- merge car stores
         ''')
     switch(value)
 
